@@ -5,18 +5,22 @@ import socket
 import os
 import time
 from datetime import date, datetime
-from mfrc522 import SimpleMFRC522
-import RPi.GPIO as GPIO
 
-IRQ_PIN=27
+FULLSCREEN = False
 
-GPIO.setmode(GPIO.BCM)
-GPIO.setup(IRQ_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+print(os.name) 
+if os.name == "raspberrypi":
+    from mfrc522 import SimpleMFRC522
 
-reader = SimpleMFRC522()
+if os.name == "raspberrypi":
+    reader = SimpleMFRC522()
 
 def handle_rfid():
-    id = reader.read_id_no_block()
+
+    if os.name == "raspberrypi":
+        id = reader.read_id_no_block()
+    else:
+        id = None
     if id != None:
         if theSwitch == 1:
             choose(id)
@@ -159,11 +163,10 @@ def update():
     handle_rfid()
 
 def goodBye():
-    GPIO.cleanup()
     app.destroy()  # Stops the app loop
 
 app = App(title="Anyag hitelesités", bg = "#333333", width=720, height=480, layout="auto")
-app.tk.attributes('-fullscreen', True)
+app.tk.attributes('-fullscreen', FULLSCREEN)
 
 top_Box = Box(app, width=686, height=132, align="top", border=1, layout="auto")
 
