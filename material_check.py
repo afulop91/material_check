@@ -237,7 +237,7 @@ button_switch = PushButton(names_box, text="Switch", command=switch, align="bott
 button_switch.bg = "#00bfff"
 button_switch.text_bold = True
 
-theSwitch = 1
+theSwitch = 0
 checkTheSwitch(theSwitch)
 
 app.repeat(400, update)
