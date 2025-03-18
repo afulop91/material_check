@@ -5,6 +5,7 @@ import socket
 import os
 import time
 from datetime import date, datetime
+import subprocess
 
 FULLSCREEN = False
 
@@ -36,20 +37,41 @@ log_path = script_folder
 
 material_list = []
 
-with open(file_path, 'r') as file:
+with open(file_path, 'r', encoding="utf-8") as file:
     for line in file:
         material_list.append(line.strip())
 
-with open(json_path) as json_file:
+with open(json_path, encoding="utf-8") as json_file:
     users = json.load(json_file)
 
 rFID_list = list(users.keys())
 
-HOST = "172.168.0.10"  # The server's hostname or IP address
+def get_wifi_ssid():
+    result = subprocess.run(["netsh", "wlan", "show", "interfaces"], capture_output=True, text=True)
+    for line in result.stdout.split("\n"):
+        if "SSID" in line:
+            return line.split(":")[1].strip()
+    return None
+
+if os.name == "nt":
+    if get_wifi_ssid() == "Telekom-519850":
+        HOST = "192.168.1.56"  # The server's hostname or IP address
+    elif get_wifi_ssid() == "Vulcan-519850":
+        HOST = "172.168.0.10"  # The server's hostname or IP address
+    else:
+        HOST = "192.168.0.1"  # The server's hostname or IP address
+
 PORT = 22002  # The port used by the server
+print(HOST)
+
+def checkTheSwitch(mSwitch):
+    name_label1.bg = "#333333" if mSwitch == 1 else "#00bfff"
+    name_label1.text_color = "#00bfff" if mSwitch == 1 else "#333333"
+    name_label2.bg = "#333333" if mSwitch == 2 else "#00bfff"
+    name_label2.text_color = "#00bfff" if mSwitch == 2 else "#333333" 
 
 isOnline = 0
-theSwitch = 1
+rFID_chooser = ""
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     try:
@@ -67,23 +89,30 @@ filename = "date.log"
 def switch():
     global theSwitch
     theSwitch = 2 if theSwitch == 1 else 1
-    choice_box.border = 1 if theSwitch == 1 else 0
-    verify_box.border = 1 if theSwitch == 2 else 0
+    checkTheSwitch(theSwitch)
 
 def choose(id):
     global i1
     global filename
+    global rFID_chooser
+    global isOnline
+    global name_name2
+    
+    middle_Box.bg = "yellow"
+    material_active.text_color = "#333333"
+    name_name2.value = ""
+
     if i1 < len(material_list) - 1:
         i1 += 1
     else:
         i1 = 0
     material_active.value = material_list[i1]
-    rFID_active.value = id #random.choice(rFID_list)
+    rFID_chooser = id #random.choice(rFID_list)
     try:
-        name_active.value = users[rFID_active.value]
+        name_name1.value = users[rFID_chooser]
     except Exception as err:
         print("Exception", err)
-        name_active.value = "Ismeretlen"
+        name_name1.value = "Ismeretlen"
 
     # Ensure the directory exists
     directory = os.path.join(log_path,str(datetime.now().year))
@@ -91,7 +120,7 @@ def choose(id):
     
     filename = str(date.today())+".log"
     log_final_path = os.path.join(directory, filename)
-    msg = str(datetime.now())+" Anyag: "+material_active.value+ " Választó: "+rFID_active.value+" "+name_active.value+"\n"
+    msg = str(datetime.now())+" Anyag: "+material_active.value+ " Választó: "+rFID_chooser+" "+name_name1.value+"\n"
     with open(log_final_path, 'a') as log:
         log.write(msg)
         
@@ -101,25 +130,26 @@ def choose(id):
             s.settimeout(0.1)
             s.connect((HOST, PORT))
             s.send(msg.encode("windows-1250"))
-            onlineOfflineText.value = "Online"
-            onlineOfflineBox.bg = "green"
+            isOnline = 1
         except Exception as err:
             print("Exception", err)
-            onlineOfflineText.value = "Offline"
-            onlineOfflineBox.bg = "red"
-
+            isOnline = 0
 
 def verify(id):
-    rFID_active_verify.value = id #random.choice(rFID_list)
+    global isOnline
+
+    middle_Box.bg = "green"
+    material_active.text_color = "#00bfff"
+    
+    rFID_verifyer = id #random.choice(rFID_list)
     try:
-        name_active_verify.value = users[rFID_active_verify.value]
+        name_name2.value = users[rFID_verifyer]
     except Exception as err:
         print("Exception", err)
-        name_active_verify.value = "Ismeretlen"
-    material_active_verify.value = material_active.value
+        name_name2.value = "Ismeretlen"
 
-    msgString_1 = str(datetime.now())+" Kiválasztott anyag: "+material_active.value+" Választó: "+rFID_active.value+" "+name_active.value
-    msgString_2 = " Hitelesített anyag: "+material_active_verify.value+" Hitelesítő: "+rFID_active_verify.value+" "+name_active_verify.value+" ""\n"
+    msgString_1 = str(datetime.now())+" Kiválasztott anyag: "+material_active.value+" Választó: "+rFID_chooser+" "+name_name1.value
+    msgString_2 = " Hitelesítő: "+rFID_verifyer+" "+name_name2.value+" ""\n"
     msg = msgString_1 + msgString_2
 
     # Ensure the directory exists
@@ -136,30 +166,22 @@ def verify(id):
             s.settimeout(0.1)
             s.connect((HOST, PORT))
             s.send(msg.encode("windows-1250"))
-            onlineOfflineText.value = "Online"
-            onlineOfflineBox.bg = "green"
+            isOnline = 1
         except Exception as err:
             print("Exception", err)
-            onlineOfflineText.value = "Offline"
-            onlineOfflineBox.bg = "red"
+            isOnline = 0
 
+def handle_network():
+    if isOnline == 1:
+        onlineOfflineText.value = "Online"
+        onlineOfflineBox.bg = "green"
+    else:
+        onlineOfflineText.value = "Offline"
+        onlineOfflineBox.bg = "red"
+    onlineOfflineText.bg = "#333333"
 
 def update():
-    if rFID_active_verify.value != "" and rFID_active.value != "":
-        if rFID_active_verify.value == rFID_active.value:
-            tick_box_1.bg = "#FF4000"
-        else:
-            tick_box_1.bg = "#40ff00"
-    if name_active_verify.value != "" and name_active.value != "":
-        if name_active_verify.value == "Ismeretlen" or name_active.value == "Ismeretlen":
-            tick_box_2.bg = "#FF4000"
-        else:
-            tick_box_2.bg = "#40ff00"
-    if material_active_verify.value != "" and material_active.value != "":
-        if material_active_verify.value == material_active.value:
-            tick_box_3.bg = "#40ff00"
-        else:
-            tick_box_3.bg = "#FF4000"
+    handle_network()
     handle_rfid()
 
 def goodBye():
@@ -168,69 +190,30 @@ def goodBye():
 app = App(title="Anyag hitelesités", bg = "#333333", width=720, height=480, layout="auto")
 app.tk.attributes('-fullscreen', FULLSCREEN)
 
-top_Box = Box(app, width=686, height=132, align="top", border=1, layout="auto")
+top_Box = Box(app, width=800, height=70, border=0, layout="auto")
 
-Title = Text(top_Box, text="Anyag hitelesítés", color="#00bfff", align="left", size=24)
+#copyright_Box = Box(top_Box, width="fill", align="bottom")
+copyright = Text(top_Box, "Syntaks©", color="#00bfff", size=8, align="left")
+
+Title = Text(top_Box, text="Anyag hitelesítés", color="#00bfff", align="left", size=20)
 Title.text_bold = True
 
-exit_Right_Box = Box(top_Box, width=48, height=100, align="right")
-exit_Top_Box = Box(exit_Right_Box, width=32, height=32, align="top")
-exit_Button = PushButton(exit_Top_Box, width=32, height=32, align="top", text="X", command=goodBye)
+exit_Right_Box = Box(top_Box, height="fill", align="right")
+exit_Top_Box = Box(exit_Right_Box, width=32, height=32, align="top", border=0)
+exit_Button = PushButton(exit_Top_Box, width=32, height=32, align="right", text="X", command=goodBye)
 exit_Button.bg = "#00bfff"
 exit_Button.text_bold = True
 
-middle_Box = Box(app, width=686, height=230, align="top", border=0, layout="auto")
+middle_Box = Box(app, width=800, height=340, align="top", border=0, layout="auto")
+material_Box = Box(middle_Box, height="fill", align="top", border=0, layout="auto")
+material_active = Text(material_Box, "Tisztítás", color="#00bfff", width="fill", align="left", size=120)
 
-padding_box = Box(middle_Box, width=10, height=280, align="left", border=0, layout="auto")
-label_box = Box(middle_Box, width=100, height=280, align="left", border=0, layout="auto")
-label_box2 = Box(label_box, align="left", border=0, layout="auto")
-choice_box = Box(middle_Box, width=260, height=280, align="left", border=0, layout="auto")
-choice_box2 = Box(choice_box, align="left", border=0, layout="auto")
-result_box = Box(middle_Box, width=50, height=280, align="left", border=0, layout="auto")
-result_box2 = Box(result_box, align="left", border=0, layout="auto")
-#label_box_2 = Box(middle_Box, width=55, height=280, align="left", border=0, layout="auto")
-verify_box = Box(middle_Box, width=260, height=280, align="left", border=0, layout="auto")
-verify_box2 = Box(verify_box, align="left", border=0, layout="auto")
-
-rFID_label = Text(label_box2, text="RFID: ", color="#00bfff", width="fill", align="top", size=20)
-name_label = Text(label_box2, "Név: ", color="#00bfff", width="fill",align="top", size=20)
-material_label = Text(label_box2, "Anyag: ", color="#00bfff", width="fill",align="top", size=20)
-
-rFID_active = Text(choice_box2, "", color="#00bfff", width="fill", size=20)
-name_active = Text(choice_box2, "", color="#00bfff", width="fill", size=20)
-material_active = Text(choice_box2, "", color="#00bfff",  width="fill", size=20)
-
-#button_cycle = PushButton(choice_box, text="Cycle", command=cycle, align="left")
-#button_cycle.bg = "#00bfff"
-#button_cycle.text_bold = True
-#cycle_RFID = TextBox(choice_box, align="left")
-#cycle_RFID.text_size = 20
-#cycle_RFID.text_color = "#00bfff"
-#cycle_RFID.text_bold = True
-
-tick_box_1 = Box(result_box2, width=40, height=40, border=1)
-tick_box_2 = Box(result_box2, width=40, height=40, border=1)
-tick_box_3 = Box(result_box2, width=40, height=40, border=1)
-
-#rFID_label = Text(label_box_2, text="RFID: ", color="#00bfff", width="fill", bold=True)
-#name_label = Text(label_box_2, "Név: ", color="#00bfff", width="fill", bold=True)
-#material_label = Text(label_box_2, "Anyag: ", color="#00bfff", width="fill", bold=True)
-
-rFID_active_verify = Text(verify_box2, "", color="#00bfff", width="fill", size=20)
-name_active_verify = Text(verify_box2, "", color="#00bfff", width="fill", size=20)
-material_active_verify = Text(verify_box2, "", color="#00bfff", width="fill", size=20)
-
-#verify_RFID = TextBox(verify_box, align="left")
-#verify_RFID.text_size = 20
-#verify_RFID.text_color = "#00bfff"
-#verify_RFID.text_bold = True
-
-bottom_box = Box(app, width=686, height=150, align="top", border=1, layout="auto")
+bottom_box = Box(app, width=800, height=70, align="top", border=0, layout="auto")
 
 
-onlineOfflineBox = Box(bottom_box, height = 50, width="fill", align="bottom")
+onlineOfflineBox = Box(bottom_box, height = 32, width="fill", align="bottom")
 onlineOfflineBox2 = Box(onlineOfflineBox, height = "fill", align="top")
-onlineOfflineText = Text(onlineOfflineBox2, "Offline", bg="#333333", color="#00bfff", align="left", size=22)
+onlineOfflineText = Text(onlineOfflineBox2, "Offline", bg="#333333", color="#00bfff", align="left", size=16)
 if isOnline:        
     onlineOfflineText.value = "Online"
     onlineOfflineBox.bg = "green"
@@ -240,12 +223,22 @@ else:
     onlineOfflineBox.bg = "red"
     onlineOfflineText.bg = "#333333"
 
-copyright_Box = Box(bottom_box, width="fill", align="bottom")
-copyright = Text(copyright_Box, "Syntaks©", color="#00bfff", align="right", size=12)
+names_box = Box(bottom_box, width="fill", align="bottom", border=0)
+name_label1 = Text(names_box, "Választó: ", color="#00bfff", align="left", size=16)
+name_name1 = Text(names_box, "Kovács Péter András", color="#00bfff", align="left", size=16)
+name_name2 = Text(names_box, "Horváth Gábor", color="#00bfff", align="right", size=16)
+name_label2 = Text(names_box, "Hitelesítő: ", color="#00bfff", align="right", size=16)
 
-button_verify = PushButton(bottom_box, text="Switch", command=switch, align="bottom")
-button_verify.bg = "#00bfff"
-button_verify.text_bold = True
+button_choose = PushButton(names_box, text="Choose", command=choose, args=["1234567"], align="left")
+button_choose.text_color = "#00bfff"
+button_verify = PushButton(names_box, text="Verify", command=verify, args=["3456789"], align="right")
+button_verify.text_color = "#00bfff"
+button_switch = PushButton(names_box, text="Switch", command=switch, align="bottom")
+button_switch.bg = "#00bfff"
+button_switch.text_bold = True
+
+theSwitch = 1
+checkTheSwitch(theSwitch)
 
 app.repeat(400, update)
 
