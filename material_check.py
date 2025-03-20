@@ -7,18 +7,18 @@ import time
 from datetime import date, datetime
 import subprocess
 
-FULLSCREEN = False
+FULLSCREEN = True
 
 print(os.name) 
-if os.name == "raspberrypi":
+if os.name == "posix":
     from mfrc522 import SimpleMFRC522
 
-if os.name == "raspberrypi":
+if os.name == "posix":
     reader = SimpleMFRC522()
 
 def handle_rfid():
 
-    if os.name == "raspberrypi":
+    if os.name == "posix":
         id = reader.read_id_no_block()
     else:
         id = None
@@ -59,7 +59,9 @@ if os.name == "nt":
     elif get_wifi_ssid() == "Vulcan-519850":
         HOST = "172.168.0.10"  # The server's hostname or IP address
     else:
-        HOST = "192.168.0.1"  # The server's hostname or IP address
+        HOST = "192.168.0.1"  # The server's hostname or IP addrress
+else:
+    HOST = "192.168.0.2"
 
 PORT = 22002  # The port used by the server
 print(HOST)
