@@ -8,6 +8,8 @@ from datetime import date, datetime
 import subprocess
 
 FULLSCREEN = False
+GRAY = "#333333"
+BLUE = "#00bfff"
 
 print(os.name) 
 if os.name == "posix":
@@ -100,7 +102,7 @@ def choose(id):
     global isOnline
     global name_name2
     
-    middle_Box.bg = "yellow"
+    middle_Box.bg = "red"
     material_active.text_color = "#333333"
     name_name2.value = ""
 
@@ -112,9 +114,13 @@ def choose(id):
     rFID_chooser = id #random.choice(rFID_list)
     try:
         name_name1.value = users[rFID_chooser]
+        name_name1.text_color = BLUE
+        name_name1.bg = GRAY    
     except Exception as err:
         print("Exception", err)
         name_name1.value = "Ismeretlen"
+        name_name1.text_color = GRAY
+        name_name1.bg = "red"
 
     # Ensure the directory exists
     directory = os.path.join(log_path,str(datetime.now().year))
@@ -140,15 +146,22 @@ def choose(id):
 def verify(id):
     global isOnline
 
-    middle_Box.bg = "green"
+    if rFID_chooser != rFID_verifyer:
+        middle_Box.bg = "green"
+    else:
+        middle_Box.bg = "yellow"
     material_active.text_color = "#00bfff"
     
     rFID_verifyer = id #random.choice(rFID_list)
     try:
         name_name2.value = users[rFID_verifyer]
+        name_name2.text_color = BLUE
+        name_name2.bg = GRAY  
     except Exception as err:
         print("Exception", err)
         name_name2.value = "Ismeretlen"
+        name_name2.text_color = GRAY
+        name_name2.bg = "red"
 
     msgString_1 = str(datetime.now())+" Kiválasztott anyag: "+material_active.value+" Választó: "+rFID_chooser+" "+name_name1.value
     msgString_2 = " Hitelesítő: "+rFID_verifyer+" "+name_name2.value+"\n"
