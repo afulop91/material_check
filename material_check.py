@@ -111,7 +111,7 @@ def choose(id):
     else:
         i1 = 0
     material_active.value = material_list[i1]
-    rFID_chooser = id #random.choice(rFID_list)
+    rFID_chooser = str(id) #random.choice(rFID_list)
     try:
         name_name1.value = users[rFID_chooser]
         name_name1.text_color = BLUE
@@ -146,13 +146,14 @@ def choose(id):
 def verify(id):
     global isOnline
 
+    rFID_verifyer = str(id) #random.choice(rFID_list)
     if rFID_chooser != rFID_verifyer:
         middle_Box.bg = "green"
     else:
         middle_Box.bg = "yellow"
     material_active.text_color = "#00bfff"
     
-    rFID_verifyer = id #random.choice(rFID_list)
+
     try:
         name_name2.value = users[rFID_verifyer]
         name_name2.text_color = BLUE
