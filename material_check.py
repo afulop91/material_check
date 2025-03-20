@@ -7,7 +7,7 @@ import time
 from datetime import date, datetime
 import subprocess
 
-FULLSCREEN = True
+FULLSCREEN = False
 
 print(os.name) 
 if os.name == "posix":
@@ -67,10 +67,10 @@ PORT = 22002  # The port used by the server
 print(HOST)
 
 def checkTheSwitch(mSwitch):
-    name_label1.bg = "#333333" if mSwitch == 1 else "#00bfff"
-    name_label1.text_color = "#00bfff" if mSwitch == 1 else "#333333"
-    name_label2.bg = "#333333" if mSwitch == 2 else "#00bfff"
-    name_label2.text_color = "#00bfff" if mSwitch == 2 else "#333333" 
+    name_label1.bg = "#333333" if mSwitch == 2 else "#00bfff"
+    name_label1.text_color = "#00bfff" if mSwitch == 2 else "#333333"
+    name_label2.bg = "#333333" if mSwitch == 1 else "#00bfff"
+    name_label2.text_color = "#00bfff" if mSwitch == 1 else "#333333" 
 
 isOnline = 0
 rFID_chooser = ""
@@ -151,7 +151,7 @@ def verify(id):
         name_name2.value = "Ismeretlen"
 
     msgString_1 = str(datetime.now())+" Kiválasztott anyag: "+material_active.value+" Választó: "+rFID_chooser+" "+name_name1.value
-    msgString_2 = " Hitelesítő: "+rFID_verifyer+" "+name_name2.value+" ""\n"
+    msgString_2 = " Hitelesítő: "+rFID_verifyer+" "+name_name2.value+"\n"
     msg = msgString_1 + msgString_2
 
     # Ensure the directory exists
@@ -208,7 +208,7 @@ exit_Button.text_bold = True
 
 middle_Box = Box(app, width=800, height=340, align="top", border=0, layout="auto")
 material_Box = Box(middle_Box, height="fill", align="top", border=0, layout="auto")
-material_active = Text(material_Box, "Tisztítás", color="#00bfff", width="fill", align="left", size=120)
+material_active = Text(material_Box, "", color="#00bfff", width="fill", align="left", size=120)
 
 bottom_box = Box(app, width=800, height=70, align="top", border=0, layout="auto")
 
@@ -227,19 +227,21 @@ else:
 
 names_box = Box(bottom_box, width="fill", align="bottom", border=0)
 name_label1 = Text(names_box, "Választó: ", color="#00bfff", align="left", size=16)
-name_name1 = Text(names_box, "Kovács Péter András", color="#00bfff", align="left", size=16)
-name_name2 = Text(names_box, "Horváth Gábor", color="#00bfff", align="right", size=16)
+name_name1 = Text(names_box, "", color="#00bfff", align="left", size=16)
+name_name2 = Text(names_box, "", color="#00bfff", align="right", size=16)
 name_label2 = Text(names_box, "Hitelesítő: ", color="#00bfff", align="right", size=16)
 
-button_choose = PushButton(names_box, text="Choose", command=choose, args=["1234567"], align="left")
-button_choose.text_color = "#00bfff"
-button_verify = PushButton(names_box, text="Verify", command=verify, args=["3456789"], align="right")
-button_verify.text_color = "#00bfff"
-button_switch = PushButton(names_box, text="Switch", command=switch, align="bottom")
-button_switch.bg = "#00bfff"
-button_switch.text_bold = True
+if os.name == "nt":
+    button_choose = PushButton(names_box, text="Choose", command=choose, args=["1234567"], align="left")
+    button_choose.text_color = "#00bfff"
+    button_verify = PushButton(names_box, text="Verify", command=verify, args=["3456789"], align="right")
+    button_verify.text_color = "#00bfff"
+if os.name == "posix":
+    button_switch = PushButton(names_box, text="Switch", command=switch, align="bottom")
+    button_switch.bg = "#00bfff"
+    button_switch.text_bold = True
 
-theSwitch = 0
+theSwitch = 1
 checkTheSwitch(theSwitch)
 
 app.repeat(400, update)
