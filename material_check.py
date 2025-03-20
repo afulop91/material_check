@@ -49,21 +49,25 @@ with open(json_path, encoding="utf-8") as json_file:
 rFID_list = list(users.keys())
 
 def get_wifi_ssid():
-    result = subprocess.run(["netsh", "wlan", "show", "interfaces"], capture_output=True, text=True)
-    for line in result.stdout.split("\n"):
-        if "SSID" in line:
-            return line.split(":")[1].strip()
-    return None
+    if os.name == "nt":
+        result = subprocess.run(["netsh", "wlan", "show", "interfaces"], capture_output=True, text=True)
+        for line in result.stdout.split("\n"):
+            if "SSID" in line:
+                return line.split(":")[1].strip()
+        return None
+    if os.name == "posix":
+        try:
+            ssid = subprocess.check_output(["iwgetid", "-r"]).decode().strip()
+            return ssid if ssid else "Not connected"
+        except subprocess.CalledProcessError:
+            return "Error: Not connected or no Wi-Fi interface"
 
-if os.name == "nt":
-    if get_wifi_ssid() == "Telekom-519850":
-        HOST = "192.168.1.56"  # The server's hostname or IP address
-    elif get_wifi_ssid() == "Vulcan-519850":
-        HOST = "172.168.0.10"  # The server's hostname or IP address
-    else:
-        HOST = "192.168.0.1"  # The server's hostname or IP addrress
+if get_wifi_ssid() == "Telekom-519850":
+    HOST = "192.168.1.56"  # The server's hostname or IP address
+elif get_wifi_ssid() == "Vulcan-519850":
+    HOST = "172.168.0.10"  # The server's hostname or IP address
 else:
-    HOST = "192.168.0.2"
+    HOST = "192.168.0.1"  # The server's hostname or IP addrress
 
 PORT = 22002  # The port used by the server
 print(HOST)
