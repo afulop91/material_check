@@ -153,9 +153,10 @@ def verify(id):
     rFID_verifyer = str(id) #random.choice(rFID_list)
     if rFID_chooser != rFID_verifyer:
         middle_Box.bg = "green"
+        material_active.text_color = BLUE
     else:
         middle_Box.bg = "yellow"
-    material_active.text_color = "#00bfff"
+        material_active.text_color = GRAY
     
 
     try:
